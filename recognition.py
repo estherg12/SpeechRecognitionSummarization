@@ -1,7 +1,7 @@
 from vosk import Model, KaldiRecognizer
 from pydub import AudioSegment
 import json
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 FRAME_RATE = 16000 # Cualidad del audio
 CHANNELS = 1 # Mono
@@ -23,6 +23,11 @@ text = json.loads(result).get("text", "")
 print(text)
 
 # Añadir puntuación al texto transcrito
-pipe = pipeline("token-classification", model="HiTZ/cap-punct-es")
-predictions = pipe(text)
-print(predictions)
+tokenizer = AutoTokenizer.from_pretrained("HiTZ/cap-punct-es")
+modelPunctuation = AutoModelForSeq2SeqLM.from_pretrained("HiTZ/cap-punct-es")
+
+inputs = tokenizer(text, return_tensors="pt")
+outputs = modelPunctuation.generate(**inputs)
+punctuated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+print(punctuated_text)
