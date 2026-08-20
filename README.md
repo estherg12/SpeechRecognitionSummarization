@@ -1,5 +1,5 @@
 # Speech Recognition and Summarization System
-This project was selected and is based on a tutorial from @DataQuest.
+This project was selected and is based on a tutorial from @Dataquest.
 
 ## Requirements
 We will be using the following libraries:
