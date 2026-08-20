@@ -9,6 +9,7 @@ We will be using the following libraries:
   In order to install this librarie execute the following code in your bash: `pip install pydub`
   Since pydub can only read `WAV` files natively, it is also required to have `ffmpeg` installed, so it can decode and open compressed formats like MP3s. Execute `winget install ffmpeg` in your bash.
 - Hugging Face Models for punctuation (HiTZ/cap-punct-es): `pip install sentencepiece`
+  Also, for text tokenization execute `pip install sacremoses`.
 - Transformers: `pip install transformers`
 - Torch: `pip install torch -f https://download.pytorch.org/whl/torch_stable.html`
 - pyaudio: `pip install pyaudio`
