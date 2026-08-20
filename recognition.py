@@ -1,7 +1,7 @@
 from vosk import Model, KaldiRecognizer
 from pydub import AudioSegment
 import json
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 
 FRAME_RATE = 16000 # Cualidad del audio
 CHANNELS = 1 # Mono
@@ -33,10 +33,41 @@ def voice_recognition(filename):
     tokenizer = AutoTokenizer.from_pretrained("HiTZ/cap-punct-es")
     modelPunctuation = AutoModelForSeq2SeqLM.from_pretrained("HiTZ/cap-punct-es")
 
-    inputs = tokenizer(transcript, return_tensors="pt")
-    outputs = modelPunctuation.generate(**inputs)
-    punctuated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    raw_words = transcript.split(" ")
+    chunk_size = 300
+    punctuated_chunks = []
 
+    for i in range(0, len(raw_words), chunk_size):
+        chunk = " ".join(raw_words[i:i+chunk_size])
+        inputs = tokenizer(chunk, return_tensors="pt", max_length=512, truncation=True)
+        outputs = modelPunctuation.generate(**inputs)
+        decoded_chunk = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        punctuated_chunks.append(decoded_chunk)
+
+    punctuated_text = " ".join(punctuated_chunks)
     print(punctuated_text)
 
-voice_recognition("NoticiaMuyCorta.mp3")
+    # Resumir el texto transcrito
+    sum_tokenizer = AutoTokenizer.from_pretrained("LeoCordoba/mt5-small-mlsum")
+    sum_model = AutoModelForSeq2SeqLM.from_pretrained("LeoCordoba/mt5-small-mlsum")
+
+    split_tokens = punctuated_text.split(" ")
+    docs = []
+
+    for i in range(0, len(split_tokens), 512):
+        selection = split_tokens[i:i+512]
+        docs.append(" ".join(selection))
+
+    summaries = []
+
+    for doc in docs:
+        inputs = sum_tokenizer(doc, return_tensors="pt", max_length=512, truncation=True)
+        outputs = sum_model.generate(**inputs, max_new_tokens=150, min_length=40, num_beams=4, early_stopping=True)
+        summary_text = sum_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        summaries.append(summary_text)
+    final_summary = "\n\n".join(summaries)
+    print(final_summary)
+
+
+voice_recognition("HistoriaCorto.mp3")
+
